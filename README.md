@@ -2,7 +2,7 @@
 
 A framework-independent Go asset pipeline inspired by [Rails Propshaft](https://github.com/rails/propshaft). Resolve fingerprinted asset URLs, rewrite CSS dependencies, serve assets with `net/http`, or precompile them for a static server/CDN. No Node, bundler, or transpiler is required.
 
-Module: `github.com/bittopaz/go-propshaft` · Package: `propshaft` · Go: **1.26.4+** · External dependencies: **none**.
+Module: `github.com/bittopaz/go-propshaft` · Package: `propshaft` · Go: **1.26.2+** · External dependencies: **none**.
 
 This is the initial v0.1 implementation, not a drop-in Rails port. See [GitHub releases](https://github.com/bittopaz/go-propshaft/releases) for tagged versions.
 
@@ -116,6 +116,23 @@ url, err := manifest.URL("styles/app.css")
 Serve the output directory independently using a static server/CDN. Loading a manifest validates its version, paths, and fingerprint shape, not the file contents. Keep output immutable and publish it before deploying application code using the new manifest. Retain older output as needed for cached pages and rolling deployments.
 
 Set `Cache-Control: public, max-age=31536000, immutable` for successful fingerprinted responses. Do not apply that policy to errors, the manifest, or application HTML. Disable directory listings if not needed. Static-server headers are your responsibility; the example's manifest mode deliberately uses a basic `http.FileServerFS`.
+
+## Retain assets across releases
+
+The CLI can merge **already-published** archives without recompiling or changing their bytes:
+
+```sh
+propshaft merge -manifest-from candidate -root previous -out prepared/candidate
+propshaft merge -manifest-from previous -root candidate -out prepared/bridge
+```
+
+`-manifest-from` selects the manifest to preserve byte-for-byte and includes that archive's assets. Repeat `-root` for additional archives. All current and historical asset files are retained; differing bytes at the same path are an error. Native manifest fingerprints are checked against their file contents, and every referenced file must exist. Symlinks, special files, overlapping input/output directories, and existing output are rejected. Hidden files other than the historical root `.manifest.json` are ignored. Output is staged and published only after validation; source archives are never modified.
+
+The merge command accepts native `manifest.json` and historical Ruby Propshaft `.manifest.json` archives. It does not convert their manifest formats or require Ruby. For an initial Vite migration, add **`-legacy-vite` to both commands**: this accepts `index.html` plus `assets/` and includes both root and `assets/` aliases, retaining older HTTP lookup layouts. Only the selected archive's manifest (or legacy index) is published; other releases' metadata is not copied as asset data.
+
+This prepares artifacts, not a deployment. Applications must select and roll out the correct application/manifest pair. A rolling pool typically needs the old application with the merged **bridge** archive everywhere before deploying the new application with the **candidate** archive. Roll back to the prepared bridge, not to an old image missing newer assets. Archive retention and pruning remain operator decisions.
+
+Library consumers can enumerate a validated manifest with `manifest.Entries()`, which returns an independent map of logical names to relative fingerprinted paths.
 
 ## CSS behavior
 

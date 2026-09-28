@@ -1,4 +1,4 @@
-// Command propshaft precompiles assets for static-server or CDN deployment.
+// Command propshaft precompiles assets and merges immutable release archives.
 package main
 
 import (
@@ -35,10 +35,14 @@ func (r *rootsFlag) Set(value string) error {
 func run(args []string, stdout, stderr io.Writer) error {
 	if len(args) == 0 || args[0] == "-h" || args[0] == "--help" || args[0] == "help" {
 		fmt.Fprintln(stdout, "Usage: propshaft precompile -root DIR [-root DIR ...] -out NEW_DIR [-prefix /assets/]")
+		fmt.Fprintln(stdout, "       propshaft merge -manifest-from DIR [-root DIR ...] -out NEW_DIR [-legacy-vite]")
 		return nil
 	}
+	if args[0] == "merge" {
+		return runMerge(args[1:], stdout, stderr)
+	}
 	if args[0] != "precompile" {
-		return fmt.Errorf("unknown command %q (expected precompile)", args[0])
+		return fmt.Errorf("unknown command %q (expected precompile or merge)", args[0])
 	}
 	flags := flag.NewFlagSet("precompile", flag.ContinueOnError)
 	flags.SetOutput(stderr)

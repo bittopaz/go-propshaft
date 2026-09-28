@@ -1,6 +1,6 @@
 # Initial implementation verification
 
-Verified locally on **macOS arm64** with **Go 1.27.1** and the declared minimum toolchain, **Go 1.26.4**. All checks below passed. No subagents, external services, frontend build tools, or runtime dependencies were used for verification.
+Verified locally on **macOS arm64** with **Go 1.27.1** and **Go 1.26.4** at the initial release. The minimum was subsequently lowered to **Go 1.26.2** and reverified with `GOTOOLCHAIN=go1.26.2 go test -race -tags=integration -count=1 ./...` and `GOTOOLCHAIN=go1.26.2 go vet -tags=integration ./...`, including the actual binaries. All checks below passed. No subagents, external services, frontend build tools, or runtime dependencies were used for verification.
 
 ## Automated checks
 
@@ -45,6 +45,17 @@ The example has no direct unit-test coverage; it is exercised as a real compiled
 4. In every mode, HTML asset URLs are fetched, CSS dependencies are followed recursively, and every served asset's bytes are checked against its fingerprint.
 
 Each test-owned process is stopped and temporary build/output directories are cleaned up by the test harness.
+
+## v0.1.1 archive-merging verification
+
+The lower Go 1.26.2 minimum and generic `propshaft merge` command were verified with the exact 1.26.2 toolchain:
+
+- `go test -race -tags=integration -count=1 ./...` and `go vet -tags=integration ./...` passed.
+- Native-to-native retention, cumulative archives, Ruby-to-Go migration, and Vite-to-Go root/`assets/` aliases preserve both releases' files and the selected metadata.
+- Missing files, corrupt native fingerprints, symlinks, traversal, byte collisions, file/directory collisions, existing output, and overlapping paths fail without publishing partial output or leaking staging directories.
+- Manifest enumeration returns a defensive copy; hidden files are not copied into merged output.
+- `FuzzRubyArchiveManifest` ran for 15 seconds (approximately 1.62 million executions) without a failure.
+- The CLI was also run against real 20-asset Ruby and Go archives from an adopting application, successfully producing both the old-manifest bridge and new-manifest candidate.
 
 ## Limits of this verification
 

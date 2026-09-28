@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	"path"
 	"strings"
 )
@@ -67,6 +68,12 @@ func (m *Manifest) URL(logical string) (string, error) {
 		return "", fmt.Errorf("propshaft: asset %q: %w", logical, fs.ErrNotExist)
 	}
 	return m.prefix.url + escapePath(output), nil
+}
+
+// Entries returns a copy of the logical-to-fingerprinted relative path mappings.
+// Modifying the returned map cannot change the manifest or concurrent lookups.
+func (m *Manifest) Entries() map[string]string {
+	return maps.Clone(m.assets)
 }
 
 func validFingerprint(logical, output string) bool {
