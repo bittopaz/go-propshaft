@@ -1,0 +1,27 @@
+@import "base.css";
+
+main {
+  max-width: 44rem;
+  margin: 8vh auto;
+  padding: 2rem;
+  border-top: 4px solid #0a6257;
+}
+.eyebrow {
+  padding-left: 1.75rem;
+  background: url("../images/mark.svg#mark") no-repeat left center / 1.25rem;
+  color: #0a6257;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+h1 { font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; }
+button {
+  border: 0;
+  border-radius: 0.25rem;
+  padding: 0.75rem 1rem;
+  color: white;
+  background: #0a6257;
+  font: inherit;
+  cursor: pointer;
+}
+button:focus-visible { outline: 3px solid #267df0; outline-offset: 3px; }
